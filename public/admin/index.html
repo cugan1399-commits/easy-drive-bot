@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Панель инструктора</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1 id="dateLabel">Расписание на завтра</h1>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="publish">Включить запись</button>
+      <button class="tab-btn" data-tab="day">Мой день</button>
+    </nav>
+
+    <section id="tab-publish" class="tab-panel active">
+      <p class="hint">Выбери часы, когда готов принимать учеников завтра</p>
+      <div id="hoursGrid" class="hours-grid"></div>
+      <button id="publishBtn" class="primary-btn">Опубликовать на завтра</button>
+      <p id="publishStatus" class="status-text"></p>
+    </section>
+
+    <section id="tab-day" class="tab-panel">
+      <p class="hint">Кто записан на выбранный день</p>
+      <div id="dayList" class="day-list"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
