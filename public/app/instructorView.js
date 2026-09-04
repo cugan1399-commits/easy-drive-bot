@@ -199,22 +199,27 @@ async function loadDay(root, dateStr) {
       const isFree = slot.status === "free";
       row.className = `day-row ${isFree ? "free" : ""}`;
       const student = slot.users;
+
       row.innerHTML = `
-        <span class="time">${slot.slot_time.slice(0, 5)}</span>
-        <span class="student">${isFree ? "Свободно" : student?.name || "—"}</span>
-        <span class="actions">
-          ${
-            !isFree && student?.phone
-              ? `<a href="tel:${student.phone}">📞</a><button class="msg-btn" data-uid="${slot.user_id}">💬</button>`
-              : ""
-          }
-        </span>
+        <div class="day-row-top">
+          <span class="time">${slot.slot_time.slice(0, 5)}</span>
+          <span class="student">${isFree ? "Свободно" : student?.name || "—"}</span>
+        </div>
+        ${
+          !isFree && student?.phone
+            ? `<div class="day-row-actions">
+                 <a class="action-btn" href="tel:${student.phone}">📞 Позвонить</a>
+                 <button class="action-btn msg-btn">💬 Написать</button>
+               </div>`
+            : ""
+        }
       `;
       list.appendChild(row);
 
       if (!isFree) {
-        const msgBtn = row.querySelector(".msg-btn");
-        msgBtn?.addEventListener("click", () => toggleMessageForm(row, slot.user_id));
+        row.querySelector(".msg-btn")?.addEventListener("click", () =>
+          openMessageSheet(slot.user_id, student?.name)
+        );
       }
     });
   } catch (err) {
@@ -222,36 +227,51 @@ async function loadDay(root, dateStr) {
   }
 }
 
-function toggleMessageForm(row, studentTelegramId) {
-  const existing = row.querySelector(".msg-form");
-  if (existing) {
-    existing.remove();
-    return;
-  }
-  const form = document.createElement("div");
-  form.className = "msg-form";
-  form.style.cssText = "margin-top:8px; display:flex; gap:6px;";
-  form.innerHTML = `
-    <input type="text" placeholder="Текст сообщения..." style="flex:1; padding:8px; border-radius:8px; border:1px solid #2C2C2E; background:#121212; color:#fff;" />
-    <button class="primary-btn" style="width:auto; padding:8px 14px;">Отправить</button>
-  `;
-  row.appendChild(form);
+// Всплывающая панель снизу экрана — не толкает список, просто ложится поверх
+function openMessageSheet(studentTelegramId, studentName) {
+  document.querySelector(".msg-sheet-backdrop")?.remove();
 
-  const input = form.querySelector("input");
-  const sendBtn = form.querySelector("button");
-  sendBtn.addEventListener("click", async () => {
+  const backdrop = document.createElement("div");
+  backdrop.className = "msg-sheet-backdrop";
+  backdrop.innerHTML = `
+    <div class="msg-sheet">
+      <p class="hint">Сообщение для ${studentName || "ученика"}</p>
+      <textarea class="msg-sheet-input" placeholder="Текст сообщения..." rows="3"></textarea>
+      <div class="msg-sheet-buttons">
+        <button class="secondary-btn" id="msgSheetCancel">Отмена</button>
+        <button class="primary-btn" id="msgSheetSend">Отправить</button>
+      </div>
+      <p class="status-text" id="msgSheetStatus"></p>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  const close = () => backdrop.remove();
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) close();
+  });
+  backdrop.querySelector("#msgSheetCancel").addEventListener("click", close);
+
+  backdrop.querySelector("#msgSheetSend").addEventListener("click", async () => {
+    const input = backdrop.querySelector(".msg-sheet-input");
+    const statusEl = backdrop.querySelector("#msgSheetStatus");
     const text = input.value.trim();
     if (!text) return;
+
+    const sendBtn = backdrop.querySelector("#msgSheetSend");
     sendBtn.disabled = true;
+    statusEl.textContent = "Отправляем...";
     try {
       await apiFetch("/admin/message-student", {
         method: "POST",
         body: JSON.stringify({ studentTelegramId, text }),
       });
-      form.innerHTML = "<span class='hint'>Отправлено ✅</span>";
-      setTimeout(() => form.remove(), 1500);
+      statusEl.textContent = "Отправлено ✅";
+      tg.HapticFeedback.notificationOccurred("success");
+      setTimeout(close, 900);
     } catch (err) {
-      form.innerHTML = `<span class="hint error-text">Ошибка: ${err.message}</span>`;
+      statusEl.textContent = `Ошибка: ${err.message}`;
+      sendBtn.disabled = false;
     }
   });
 }

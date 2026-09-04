@@ -114,12 +114,18 @@ body {
 
 .day-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
   padding: 12px 14px;
   border-radius: 10px;
   background: var(--card);
   border: 1px solid #2C2C2E;
+}
+
+.day-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .day-row .time {
@@ -137,11 +143,15 @@ body {
   color: var(--muted);
 }
 
-.day-row .actions a,
-.day-row .actions .msg-btn {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 6px 10px;
+.day-row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
   border-radius: 8px;
   border: none;
   background: #2C2C2E;
@@ -149,6 +159,57 @@ body {
   text-decoration: none;
   font-size: 13px;
   cursor: pointer;
+}
+
+.msg-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 1000;
+}
+
+.msg-sheet {
+  width: 100%;
+  background: var(--bg);
+  border-top: 1px solid #2C2C2E;
+  border-radius: 16px 16px 0 0;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.msg-sheet-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #2C2C2E;
+  background: #1C1C1E;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  resize: none;
+  margin: 10px 0;
+}
+
+.msg-sheet-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.secondary-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #2C2C2E;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.msg-sheet-buttons .primary-btn {
+  flex: 1;
 }
 
 .loading-screen {
