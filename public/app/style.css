@@ -1,0 +1,183 @@
+:root {
+  --bg: #121212;
+  --accent: #00F5D4;
+  --text: #FFFFFF;
+  --muted: #8E8E93;
+  --card: #1C1C1E;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.app-header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 8px 0 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #2C2C2E;
+}
+
+.tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.hours-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.hour-chip {
+  padding: 12px 0;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid #2C2C2E;
+  background: var(--card);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.hour-chip.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #06231E;
+  font-weight: 700;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: #06231E;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+}
+
+.status-text {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.day-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.day-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid #2C2C2E;
+}
+
+.day-row .time {
+  font-weight: 700;
+  width: 56px;
+}
+
+.day-row .student {
+  flex: 1;
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.day-row.free .student {
+  color: var(--muted);
+}
+
+.day-row .actions a {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #2C2C2E;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.loading-screen {
+  text-align: center;
+  color: var(--muted);
+  padding: 60px 0;
+  font-size: 14px;
+}
+
+.slot-chip {
+  padding: 12px 0;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid #2C2C2E;
+  background: var(--card);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.slot-chip.busy {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+.slot-chip.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #06231E;
+  font-weight: 700;
+}
+
+.error-text {
+  color: #FF6B6B;
+}

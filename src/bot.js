@@ -42,8 +42,8 @@ async function fillProfile(conversation, ctx) {
 
   await ctx.reply(
     isAdmin
-      ? `Готово, ${name}! Профиль инструктора создан. Открывай Mini App, чтобы опубликовать расписание.`
-      : `Спасибо, ${name}! Профиль заполнен. Как только инструктор откроет запись на завтра — пришлём уведомление.`
+      ? `Готово, ${name}! Профиль инструктора создан. Напиши /app, чтобы опубликовать расписание.`
+      : `Спасибо, ${name}! Профиль заполнен. Как только инструктор откроет запись на завтра — пришлём уведомление, а записаться сможешь через /app.`
   );
 }
 
@@ -90,7 +90,23 @@ bot.command("start_notif", async (ctx) => {
   await ctx.reply("Уведомления о расписании снова включены ✅");
 });
 
-// Открывает Mini App с админкой — доступно только инструктору
+// Открывает Mini App — доступно всем зарегистрированным пользователям,
+// сама Mini App решает, какой экран показать (инструктор/ученик)
+bot.command("app", async (ctx) => {
+  const appUrl = process.env.APP_URL;
+  if (!appUrl) {
+    await ctx.reply("APP_URL не задан в .env — без него не могу открыть Mini App.");
+    return;
+  }
+
+  await ctx.reply("Открываю приложение:", {
+    reply_markup: {
+      inline_keyboard: [[{ text: "🚗 Открыть", web_app: { url: `${appUrl}/app/` } }]],
+    },
+  });
+});
+
+// Открывает Mini App — доступно только инструктору
 bot.command("admin", async (ctx) => {
   if (ctx.from.id !== INSTRUCTOR_TELEGRAM_ID) {
     await ctx.reply("Эта команда доступна только инструктору.");

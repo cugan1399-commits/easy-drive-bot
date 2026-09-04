@@ -85,6 +85,33 @@ async function getDaySlots({ instructorId, slotDate }) {
   return data;
 }
 
+async function getStudentSlotsView({ instructorId, slotDate }) {
+  // Студенту не нужно чужое имя/телефон — только время и статус
+  const { data, error } = await supabase
+    .from("slots")
+    .select("slot_time, status")
+    .eq("instructor_id", instructorId)
+    .eq("slot_date", slotDate)
+    .order("slot_time", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+async function bookSlots({ instructorId, userId, slotDate, times }) {
+  const { data, error } = await supabase.rpc("book_slots", {
+    p_instructor_id: instructorId,
+    p_user_id: userId,
+    p_slot_date: slotDate,
+    p_slot_times: times,
+  });
+
+  if (error) throw error; // текст ошибки содержит SLOT_TAKEN:HH:MM или SLOT_NOT_FOUND:HH:MM
+  return data;
+}
+
+module.exports.getStudentSlotsView = getStudentSlotsView;
+module.exports.bookSlots = bookSlots;
 module.exports.publishTomorrowSlots = publishTomorrowSlots;
 module.exports.getStudentsForBroadcast = getStudentsForBroadcast;
 module.exports.getDaySlots = getDaySlots;
