@@ -205,14 +205,53 @@ async function loadDay(root, dateStr) {
         <span class="actions">
           ${
             !isFree && student?.phone
-              ? `<a href="tel:${student.phone}">📞</a><a href="https://t.me/${slot.user_id}">💬</a>`
+              ? `<a href="tel:${student.phone}">📞</a><button class="msg-btn" data-uid="${slot.user_id}">💬</button>`
               : ""
           }
         </span>
       `;
       list.appendChild(row);
+
+      if (!isFree) {
+        const msgBtn = row.querySelector(".msg-btn");
+        msgBtn?.addEventListener("click", () => toggleMessageForm(row, slot.user_id));
+      }
     });
   } catch (err) {
     list.innerHTML = `<p class='hint error-text'>Ошибка: ${err.message}</p>`;
   }
+}
+
+function toggleMessageForm(row, studentTelegramId) {
+  const existing = row.querySelector(".msg-form");
+  if (existing) {
+    existing.remove();
+    return;
+  }
+  const form = document.createElement("div");
+  form.className = "msg-form";
+  form.style.cssText = "margin-top:8px; display:flex; gap:6px;";
+  form.innerHTML = `
+    <input type="text" placeholder="Текст сообщения..." style="flex:1; padding:8px; border-radius:8px; border:1px solid #2C2C2E; background:#121212; color:#fff;" />
+    <button class="primary-btn" style="width:auto; padding:8px 14px;">Отправить</button>
+  `;
+  row.appendChild(form);
+
+  const input = form.querySelector("input");
+  const sendBtn = form.querySelector("button");
+  sendBtn.addEventListener("click", async () => {
+    const text = input.value.trim();
+    if (!text) return;
+    sendBtn.disabled = true;
+    try {
+      await apiFetch("/admin/message-student", {
+        method: "POST",
+        body: JSON.stringify({ studentTelegramId, text }),
+      });
+      form.innerHTML = "<span class='hint'>Отправлено ✅</span>";
+      setTimeout(() => form.remove(), 1500);
+    } catch (err) {
+      form.innerHTML = `<span class="hint error-text">Ошибка: ${err.message}</span>`;
+    }
+  });
 }

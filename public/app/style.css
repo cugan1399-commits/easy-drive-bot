@@ -137,15 +137,18 @@ body {
   color: var(--muted);
 }
 
-.day-row .actions a {
+.day-row .actions a,
+.day-row .actions .msg-btn {
   display: inline-block;
   margin-left: 6px;
   padding: 6px 10px;
   border-radius: 8px;
+  border: none;
   background: #2C2C2E;
   color: var(--text);
   text-decoration: none;
   font-size: 13px;
+  cursor: pointer;
 }
 
 .loading-screen {

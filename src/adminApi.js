@@ -140,6 +140,22 @@ function createAdminRouter({ bot, botToken }) {
     }
   });
 
+  // Сообщение конкретному ученику через бота (замена нерабочей ссылке t.me/<id> —
+  // Telegram не открывает личный чат по числовому id, только по @username)
+  router.post("/message-student", async (req, res) => {
+    try {
+      const { studentTelegramId, text } = req.body;
+      if (!studentTelegramId || !text || !text.trim()) {
+        return res.status(400).json({ error: "Нужны studentTelegramId и text" });
+      }
+      await bot.api.sendMessage(studentTelegramId, `✉️ Сообщение от инструктора:\n${text.trim()}`);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("Ошибка отправки сообщения ученику:", err);
+      res.status(500).json({ error: "Не получилось отправить сообщение" });
+    }
+  });
+
   return router;
 }
 
