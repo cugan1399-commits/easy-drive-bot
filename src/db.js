@@ -110,8 +110,13 @@ async function bookSlots({ instructorId, userId, slotDate, times }) {
   return data;
 }
 
-module.exports.getStudentSlotsView = getStudentSlotsView;
-module.exports.bookSlots = bookSlots;
-module.exports.publishTomorrowSlots = publishTomorrowSlots;
-module.exports.getStudentsForBroadcast = getStudentsForBroadcast;
-module.exports.getDaySlots = getDaySlots;
+module.exports = {
+  supabase,
+  getUserByTelegramId,
+  createUser,
+  publishTomorrowSlots,
+  getStudentsForBroadcast,
+  getDaySlots,
+  getStudentSlotsView,
+  bookSlots,
+};
