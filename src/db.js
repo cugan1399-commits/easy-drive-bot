@@ -143,6 +143,23 @@ async function bookSlots({ instructorId, userId, slotDate, times }) {
   return data;
 }
 
+async function saveMessageRelay(adminMessageId, studentTelegramId) {
+  const { error } = await supabase
+    .from("message_relay")
+    .insert({ admin_message_id: adminMessageId, student_telegram_id: studentTelegramId });
+  if (error) throw error;
+}
+
+async function getRelayStudentId(adminMessageId) {
+  const { data, error } = await supabase
+    .from("message_relay")
+    .select("student_telegram_id")
+    .eq("admin_message_id", adminMessageId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.student_telegram_id || null;
+}
+
 module.exports = {
   supabase,
   getUserByTelegramId,
@@ -153,4 +170,6 @@ module.exports = {
   getDaySlots,
   getStudentSlotsView,
   bookSlots,
+  saveMessageRelay,
+  getRelayStudentId,
 };
