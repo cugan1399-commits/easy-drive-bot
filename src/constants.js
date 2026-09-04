@@ -5,4 +5,8 @@ const FIXED_HOURS = [
   "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00",
 ];
 
-module.exports = { FIXED_HOURS };
+// За сколько часов до начала занятия ученику ещё разрешено отменить запись.
+// Меньше этого порога — кнопка отмены в интерфейсе блокируется.
+const CANCEL_MIN_HOURS_BEFORE = 2;
+
+module.exports = { FIXED_HOURS, CANCEL_MIN_HOURS_BEFORE };

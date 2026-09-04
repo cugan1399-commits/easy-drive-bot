@@ -160,6 +160,155 @@ async function getRelayStudentId(adminMessageId) {
   return data?.student_telegram_id || null;
 }
 
+// --- Кусок 4: отмена записи учеником ---
+
+async function getBookedSlotForStudent({ userId, slotDate, slotTime }) {
+  const { data, error } = await supabase
+    .from("slots")
+    .select("id, instructor_id, slot_date, slot_time, status, user_id")
+    .eq("user_id", userId)
+    .eq("slot_date", slotDate)
+    .eq("slot_time", slotTime)
+    .eq("status", "busy")
+    .maybeSingle();
+
+  if (error) throw error;
+  return data; // null, если такой брони уже нет
+}
+
+async function getUpcomingBookingsForStudent({ userId }) {
+  // На практике бронь всегда только на завтра (студент не выбирает дату сам),
+  // но выбираем по user_id без привязки к конкретной дате — на случай,
+  // если в будущем появится возможность бронировать на другие дни.
+  const { data, error } = await supabase
+    .from("slots")
+    .select("slot_date, slot_time")
+    .eq("user_id", userId)
+    .eq("status", "busy")
+    .order("slot_date", { ascending: true })
+    .order("slot_time", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+async function cancelBooking({ slotId, instructorId, userId, slotDate, slotTime, reason }) {
+  // Освобождаем слот только если он всё ещё занят именно этим учеником —
+  // простая защита от повторного/гоночного вызова отмены на один и тот же слот.
+  const { data: updated, error: eUpdate } = await supabase
+    .from("slots")
+    .update({ status: "free", user_id: null })
+    .eq("id", slotId)
+    .eq("status", "busy")
+    .eq("user_id", userId)
+    .select();
+
+  if (eUpdate) throw eUpdate;
+  if (!updated || updated.length === 0) {
+    return { ok: false, reason: "ALREADY_CANCELED" };
+  }
+
+  const { error: eHistory } = await supabase.from("history").insert({
+    instructor_id: instructorId,
+    user_id: userId,
+    date: slotDate,
+    time: slotTime,
+    status: "canceled",
+    cancel_reason: reason || null,
+  });
+  if (eHistory) throw eHistory;
+
+  return { ok: true };
+}
+
+// --- Кусок 4: календарь и профиль ученика ---
+
+async function getStudentHistory({ userId, monthStart, monthEnd }) {
+  const { data, error } = await supabase
+    .from("history")
+    .select("date, time, status, cancel_reason")
+    .eq("user_id", userId)
+    .gte("date", monthStart)
+    .lte("date", monthEnd)
+    .order("date", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+async function updateUserProfile({ telegramId, name, phone, notificationEnabled }) {
+  const patch = {};
+  if (name !== undefined) patch.name = name;
+  if (phone !== undefined) patch.phone = phone;
+  if (notificationEnabled !== undefined) patch.notification_enabled = notificationEnabled;
+
+  const { data, error } = await supabase
+    .from("users")
+    .update(patch)
+    .eq("telegram_id", telegramId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// --- Кусок 4: база учеников и статистика инструктора ---
+
+async function getAllStudents({ instructorId }) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("telegram_id, name, phone, notification_enabled")
+    .eq("instructor_id", instructorId)
+    .eq("is_admin", false)
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+async function getStudentHistoryForInstructor({ instructorId, studentTelegramId }) {
+  const { data, error } = await supabase
+    .from("history")
+    .select("id, date, time, status, cancel_reason")
+    .eq("instructor_id", instructorId)
+    .eq("user_id", studentTelegramId)
+    .order("date", { ascending: false })
+    .order("time", { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
+async function getCompletedCountForMonth({ instructorId, monthStart, monthEnd }) {
+  const { count, error } = await supabase
+    .from("history")
+    .select("id", { count: "exact", head: true })
+    .eq("instructor_id", instructorId)
+    .eq("status", "completed")
+    .gte("date", monthStart)
+    .lte("date", monthEnd);
+
+  if (error) throw error;
+  return count || 0;
+}
+
+async function markNoShow({ historyId, instructorId }) {
+  // Обновляем, только если запись реально принадлежит этому инструктору и была 'completed' —
+  // так нельзя случайно перезаписать чужую или уже отменённую запись.
+  const { data, error } = await supabase
+    .from("history")
+    .update({ status: "no_show" })
+    .eq("id", historyId)
+    .eq("instructor_id", instructorId)
+    .eq("status", "completed")
+    .select()
+    .maybeSingle();
+
+  if (error) throw error;
+  return data; // null, если подходящая запись не нашлась
+}
+
 module.exports = {
   supabase,
   getUserByTelegramId,
@@ -172,4 +321,13 @@ module.exports = {
   bookSlots,
   saveMessageRelay,
   getRelayStudentId,
+  getBookedSlotForStudent,
+  getUpcomingBookingsForStudent,
+  cancelBooking,
+  getStudentHistory,
+  updateUserProfile,
+  getAllStudents,
+  getStudentHistoryForInstructor,
+  getCompletedCountForMonth,
+  markNoShow,
 };

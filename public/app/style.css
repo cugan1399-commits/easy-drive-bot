@@ -245,3 +245,303 @@ body {
 .error-text {
   color: #FF6B6B;
 }
+
+/* --- Календарь ("Мои занятия") --- */
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.calendar-header .nav-btn {
+  background: var(--card);
+  border: 1px solid #2C2C2E;
+  color: var(--text);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+
+.calendar-header .month-label {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding-bottom: 4px;
+}
+
+.calendar-day {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid #2C2C2E;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.calendar-day.empty {
+  background: none;
+  border: none;
+}
+
+.calendar-day .dot {
+  position: absolute;
+  bottom: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.calendar-day .dot.completed { background: var(--accent); }
+.calendar-day .dot.canceled { background: #FF6B6B; }
+
+.day-detail-card {
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid #2C2C2E;
+  margin-bottom: 20px;
+}
+
+.day-detail-card .lesson-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #2C2C2E;
+}
+
+.day-detail-card .lesson-row:last-child {
+  border-bottom: none;
+}
+
+.lesson-status {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.lesson-status.completed { background: rgba(0, 245, 212, 0.15); color: var(--accent); }
+.lesson-status.canceled { background: rgba(255, 107, 107, 0.15); color: #FF6B6B; }
+.lesson-status.busy { background: rgba(255, 255, 255, 0.1); color: var(--text); }
+.lesson-status.no_show { background: rgba(142, 142, 147, 0.2); color: var(--muted); }
+
+.cancel-btn {
+  background: none;
+  border: 1px solid #FF6B6B;
+  color: #FF6B6B;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.cancel-btn:disabled {
+  opacity: 0.4;
+}
+
+/* --- Профиль --- */
+
+.profile-field {
+  margin-bottom: 16px;
+}
+
+.profile-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.profile-field input[type="text"],
+.profile-field input[type="tel"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #2C2C2E;
+  background: var(--card);
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid #2C2C2E;
+  margin-bottom: 20px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.switch-track {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #2C2C2E;
+  border-radius: 26px;
+  transition: 0.2s;
+}
+
+.switch-track::before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.switch input:checked + .switch-track {
+  background: var(--accent);
+}
+
+.switch input:checked + .switch-track::before {
+  transform: translateX(18px);
+}
+
+/* --- Модалка отмены --- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg);
+  border: 1px solid #2C2C2E;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.modal-card h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.modal-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #2C2C2E;
+  background: #1C1C1E;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  resize: none;
+  margin: 10px 0;
+}
+
+/* --- Инструктор: "База и счётчик" --- */
+
+.stats-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid #2C2C2E;
+  margin-bottom: 20px;
+}
+
+.stats-card .stats-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stats-card .stats-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stats-card select {
+  background: #1C1C1E;
+  color: var(--text);
+  border: 1px solid #2C2C2E;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+}
+
+.student-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid #2C2C2E;
+  margin-bottom: 10px;
+}
+
+.student-list-item .student-name {
+  font-weight: 600;
+}
+
+.student-list-item .student-phone {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.broadcast-box {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #2C2C2E;
+}
+
+.broadcast-box textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #2C2C2E;
+  background: #1C1C1E;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  margin-bottom: 10px;
+}

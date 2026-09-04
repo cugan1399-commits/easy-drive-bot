@@ -5,6 +5,7 @@ const bot = require("./bot");
 const { createAdminRouter } = require("./adminApi");
 const { createCommonRouter } = require("./commonApi");
 const { createStudentRouter } = require("./studentApi");
+const { startAutoCompleteCron } = require("./cron");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,9 @@ app.use("/api/student", createStudentRouter({ bot, botToken: process.env.BOT_TOK
 app.listen(PORT, () => {
   console.log(`HTTP-сервер запущен на порту ${PORT}`);
 });
+
+// Кусок 4: ежедневное автозавершение прошедших занятий (перенос в history) в 22:00
+startAutoCompleteCron();
 
 // Пока используем long polling — просто и достаточно для Куска 1.
 // На вебхук переходим позже, когда добавим Mini App и захотим экономить ресурсы.

@@ -4,6 +4,7 @@ function renderInstructorView(root) {
     <nav class="tabs">
       <button class="tab-btn active" data-tab="publish">Включить запись</button>
       <button class="tab-btn" data-tab="day">Мой день</button>
+      <button class="tab-btn" data-tab="students">База</button>
     </nav>
 
     <section id="tab-publish" class="tab-panel active">
@@ -16,7 +17,11 @@ function renderInstructorView(root) {
       <p class="hint">Кто записан на выбранный день</p>
       <div id="dayList" class="day-list"></div>
     </section>
+
+    <section id="tab-students" class="tab-panel"></section>
   `;
+
+  let studentsTabLoaded = false;
 
   root.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -25,6 +30,10 @@ function renderInstructorView(root) {
       btn.classList.add("active");
       root.querySelector(`#tab-${btn.dataset.tab}`).classList.add("active");
       if (btn.dataset.tab === "day") initDayDateChips();
+      if (btn.dataset.tab === "students" && !studentsTabLoaded) {
+        studentsTabLoaded = true;
+        renderStudentsTab(root.querySelector("#tab-students"));
+      }
     });
   });
 
