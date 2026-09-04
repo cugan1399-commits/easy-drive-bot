@@ -38,26 +38,59 @@ async function createUser({ telegramId, name, phone, instructorId, isAdmin = fal
   return data;
 }
 
-async function publishTomorrowSlots({ instructorId, times, slotDate }) {
-  // upsert: если слот на этот час уже есть — не трогаем его (вдруг уже занят
-  // с прошлой публикации), если нет — создаём свободным.
-  const rows = times.map((slot_time) => ({
-    instructor_id: instructorId,
-    slot_date: slotDate,
-    slot_time,
-    status: "free",
-  }));
-
+async function getScheduleStatus({ instructorId, slotDate }) {
+  // Текущее состояние конкретной даты: что уже опубликовано/занято/ещё не тронуто.
   const { data, error } = await supabase
     .from("slots")
-    .upsert(rows, {
-      onConflict: "instructor_id,slot_date,slot_time",
-      ignoreDuplicates: true,
-    })
-    .select();
+    .select("slot_time, status")
+    .eq("instructor_id", instructorId)
+    .eq("slot_date", slotDate);
 
   if (error) throw error;
-  return data;
+
+  const byTime = Object.fromEntries(data.map((row) => [row.slot_time.slice(0, 5), row.status]));
+  return byTime; // { "10:00": "free", "11:00": "busy", ... } — часов, которых тут нет, ещё не публиковали
+}
+
+async function reconcileSlots({ instructorId, slotDate, desiredHours }) {
+  // Приводит расписание дня к желаемому набору часов:
+  // - новые часы из desiredHours создаются свободными
+  // - часы, которые были свободны, но их убрали из desiredHours — удаляются
+  // - занятые (status='busy') часы НИКОГДА не трогаем, даже если их нет в desiredHours
+  const { data: current, error: e1 } = await supabase
+    .from("slots")
+    .select("id, slot_time, status")
+    .eq("instructor_id", instructorId)
+    .eq("slot_date", slotDate);
+  if (e1) throw e1;
+
+  const currentByTime = Object.fromEntries(current.map((r) => [r.slot_time.slice(0, 5), r]));
+  const desiredSet = new Set(desiredHours);
+  const wasEmpty = current.length === 0;
+
+  const toInsert = desiredHours
+    .filter((h) => !currentByTime[h])
+    .map((slot_time) => ({ instructor_id: instructorId, slot_date: slotDate, slot_time, status: "free" }));
+
+  const toDelete = current.filter((r) => r.status === "free" && !desiredSet.has(r.slot_time.slice(0, 5)));
+
+  if (toDelete.length > 0) {
+    const { error: eDel } = await supabase
+      .from("slots")
+      .delete()
+      .in("id", toDelete.map((r) => r.id));
+    if (eDel) throw eDel;
+  }
+  if (toInsert.length > 0) {
+    const { error: eIns } = await supabase.from("slots").insert(toInsert);
+    if (eIns) throw eIns;
+  }
+
+  return {
+    wasEmpty,
+    added: toInsert.map((r) => r.slot_time),
+    removed: toDelete.map((r) => r.slot_time.slice(0, 5)),
+  };
 }
 
 async function getStudentsForBroadcast(instructorId) {
@@ -114,7 +147,8 @@ module.exports = {
   supabase,
   getUserByTelegramId,
   createUser,
-  publishTomorrowSlots,
+  getScheduleStatus,
+  reconcileSlots,
   getStudentsForBroadcast,
   getDaySlots,
   getStudentSlotsView,
