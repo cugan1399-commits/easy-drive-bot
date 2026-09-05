@@ -10,6 +10,7 @@ const {
   getStudentHistory,
   updateUserProfile,
 } = require("./db");
+const { dateStringOffset, currentMonthString, toAppDateTime } = require("./dateUtils");
 
 function isValidMonth(monthStr) {
   return /^\d{4}-\d{2}$/.test(monthStr);
@@ -24,14 +25,8 @@ function monthRange(monthStr) {
   return { start, end };
 }
 
-function currentMonthString() {
-  return new Date().toISOString().slice(0, 7);
-}
-
 function tomorrowDateString() {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
+  return dateStringOffset(1);
 }
 
 function areConsecutiveHours(times) {
@@ -223,7 +218,7 @@ function createStudentRouter({ bot, botToken }) {
         return res.status(404).json({ error: "Такая бронь не найдена — возможно, уже отменена" });
       }
 
-      const lessonStart = new Date(`${slotDate}T${slotTime}:00`);
+      const lessonStart = toAppDateTime(slotDate, slotTime);
       const hoursLeft = (lessonStart.getTime() - Date.now()) / (1000 * 60 * 60);
       if (hoursLeft < CANCEL_MIN_HOURS_BEFORE) {
         return res.status(409).json({

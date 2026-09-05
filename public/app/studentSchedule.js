@@ -108,7 +108,9 @@ function renderScheduleTab(panel) {
   }
 
   function isCancelable(dateStr, time) {
-    const lessonStart = new Date(`${dateStr}T${time}:00`);
+    // +03:00 — явно фиксируем московское время занятия, а не полагаемся на часовой
+    // пояс браузера ученика (тот же принцип, что и на бэкенде, см. dateUtils.js)
+    const lessonStart = new Date(`${dateStr}T${time}:00+03:00`);
     const hoursLeft = (lessonStart.getTime() - Date.now()) / (1000 * 60 * 60);
     return hoursLeft >= 2; // держим в паре с CANCEL_MIN_HOURS_BEFORE на бэкенде
   }

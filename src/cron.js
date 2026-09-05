@@ -1,76 +1,40 @@
-const { supabase } = require("./db");
+const { completePastSlots } = require("./db");
+const { todayDateString, currentHour } = require("./dateUtils");
 
-// Дата (YYYY-MM-DD), для которой автозавершение уже прогонялось сегодня —
+// Дата (YYYY-MM-DD по местному времени), для которой автозавершение уже прогонялось сегодня —
 // защита от повторного запуска на каждом тике интервала.
 let lastCompletedDate = null;
 
-// Переносит все прошедшие занятые слоты в history как 'completed' и убирает их из slots.
-// Идемпотентно: если запустить дважды подряд, второй раз просто ничего не найдёт.
-// Условие "slot_date <= сегодня" (а не только "вчера") специально ловит и те дни,
-// когда сервер спал/падал ровно в момент 22:00 — при следующем успешном запуске
-// пропущенные дни всё равно подчистятся.
-async function completePastSlots() {
-  const todayStr = new Date().toISOString().slice(0, 10);
-
-  const { data: pastSlots, error: eSelect } = await supabase
-    .from("slots")
-    .select("id, instructor_id, user_id, slot_date, slot_time")
-    .eq("status", "busy")
-    .lte("slot_date", todayStr);
-
-  if (eSelect) {
-    console.error("Автозавершение: ошибка выборки прошедших слотов:", eSelect);
-    return;
+async function runAutoComplete() {
+  const cutoffDate = todayDateString(); // "сегодня" строго по местному времени (Europe/Moscow), не по времени сервера
+  try {
+    const movedCount = await completePastSlots({ cutoffDate });
+    if (movedCount > 0) {
+      console.log(`Автозавершение: ${movedCount} занятий перенесено в history (cutoff: ${cutoffDate}).`);
+    }
+  } catch (err) {
+    console.error("Автозавершение: ошибка вызова complete_past_slots:", err);
   }
-  if (!pastSlots || pastSlots.length === 0) return;
-
-  const historyRows = pastSlots.map((s) => ({
-    instructor_id: s.instructor_id,
-    user_id: s.user_id,
-    date: s.slot_date,
-    time: s.slot_time,
-    status: "completed",
-  }));
-
-  const { error: eInsert } = await supabase.from("history").insert(historyRows);
-  if (eInsert) {
-    // Не удаляем слоты, если запись в history не удалась — лучше повторить попытку
-    // на следующем тике, чем молча потерять занятия из статистики.
-    console.error("Автозавершение: ошибка записи в history, слоты не тронуты:", eInsert);
-    return;
-  }
-
-  const { error: eDelete } = await supabase
-    .from("slots")
-    .delete()
-    .in("id", pastSlots.map((s) => s.id));
-
-  if (eDelete) {
-    console.error("Автозавершение: history записан, но не удалось удалить обработанные слоты:", eDelete);
-    return;
-  }
-
-  console.log(`Автозавершение: ${pastSlots.length} занятий перенесено в history.`);
 }
 
 function startAutoCompleteCron() {
-  // Проверяем каждые 15 минут, наступило ли 22:00 и не гоняли ли автозавершение уже сегодня.
+  // Проверяем каждые 15 минут, наступило ли 22:00 по местному времени и не гоняли ли
+  // автозавершение уже сегодня. currentHour()/todayDateString() считают время по
+  // Europe/Moscow независимо от того, в каком часовом поясе физически работает сервер.
   setInterval(() => {
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    if (now.getHours() >= 22 && lastCompletedDate !== todayStr) {
+    const todayStr = todayDateString();
+    if (currentHour() >= 22 && lastCompletedDate !== todayStr) {
       lastCompletedDate = todayStr;
-      completePastSlots();
+      runAutoComplete();
     }
   }, 15 * 60 * 1000);
 
-  // Если сервер стартовал уже после 22:00 (например, после деплоя или сна на Render) —
-  // не ждём следующего тика интервала, прогоняем сразу при старте.
-  const now = new Date();
-  if (now.getHours() >= 22) {
-    lastCompletedDate = now.toISOString().slice(0, 10);
-    completePastSlots();
+  // Если сервер стартовал уже после 22:00 (например, после деплоя или "просыпания" на
+  // Render) — не ждём следующего тика интервала, прогоняем сразу при старте.
+  if (currentHour() >= 22) {
+    lastCompletedDate = todayDateString();
+    runAutoComplete();
   }
 }
 
-module.exports = { startAutoCompleteCron, completePastSlots };
+module.exports = { startAutoCompleteCron, runAutoComplete };

@@ -309,6 +309,15 @@ async function markNoShow({ historyId, instructorId }) {
   return data; // null, если подходящая запись не нашлась
 }
 
+// Атомарный перенос всех прошедших занятых слотов в history — одним SQL-запросом
+// на стороне Postgres (см. sql/complete_past_slots_function.sql). Возвращает
+// количество перенесённых занятий.
+async function completePastSlots({ cutoffDate }) {
+  const { data, error } = await supabase.rpc("complete_past_slots", { p_cutoff_date: cutoffDate });
+  if (error) throw error;
+  return data; // integer — сколько занятий перенесено
+}
+
 module.exports = {
   supabase,
   getUserByTelegramId,
@@ -330,4 +339,5 @@ module.exports = {
   getStudentHistoryForInstructor,
   getCompletedCountForMonth,
   markNoShow,
+  completePastSlots,
 };

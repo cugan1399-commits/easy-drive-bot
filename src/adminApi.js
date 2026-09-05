@@ -11,6 +11,7 @@ const {
   getCompletedCountForMonth,
   markNoShow,
 } = require("./db");
+const { dateStringOffset, currentMonthString } = require("./dateUtils");
 
 function isValidMonth(monthStr) {
   return /^\d{4}-\d{2}$/.test(monthStr);
@@ -24,17 +25,7 @@ function monthRange(monthStr) {
   return { start, end };
 }
 
-function currentMonthString() {
-  return new Date().toISOString().slice(0, 7);
-}
-
 const INSTRUCTOR_TELEGRAM_ID = Number(process.env.INSTRUCTOR_TELEGRAM_ID);
-
-function dateStringOffset(daysFromToday) {
-  const d = new Date();
-  d.setDate(d.getDate() + daysFromToday);
-  return d.toISOString().slice(0, 10);
-}
 
 function isValidDateNotInPast(dateStr) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
